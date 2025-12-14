@@ -1,13 +1,12 @@
-name: Update Strike Graph
+name: Update Strike Graph (Daily)
 
 on:
-  push:
-    paths:
-      - 'data.json' # Triggers only when you update data
-  workflow_dispatch: # Allows you to run it manually from Actions tab to test
+  schedule:
+    - cron: '0 0 * * *'  # Runs every day at midnight UTC
+  workflow_dispatch: # Allows manual run for testing
 
 permissions:
-  contents: write  # 🔑 CRITICAL FIX: Allows bot to push changes
+  contents: write # 🔑 CRITICAL FIX: Ensures the bot can write the progress.svg file
 
 jobs:
   build:
@@ -21,15 +20,25 @@ jobs:
           python-version: '3.9'
           
       - name: Install dependencies
-        run: pip install svgwrite
+        run: pip install svgwrite pandas requests # Install all needed packages
           
       - name: Generate Graph
         run: python generate.py
         
-      - name: Commit and Push
+      - name: Commit and Push (Fixed Logic)
         run: |
+          # 1. Configure the committing user (the bot)
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 2. Add the newly generated file
           git add progress.svg
-          # Only commit if the file actually changed
-          git diff --quiet && git diff --staged --quiet || (git commit -m "📊 Update graph" && git push)
+          
+          # 3. Check if the file actually changed
+          if git diff --staged --quiet; then
+            echo "No changes in graph, skipping commit."
+          else
+            # 4. Commit and Push the new file
+            git commit -m "📊 Update daily focus graph from Google Sheet"
+            git push
+          fi
