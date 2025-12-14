@@ -1,5 +1,6 @@
 import pandas as pd
 import requests
+import re
 import datetime
 import svgwrite
 from io import StringIO
@@ -129,5 +130,36 @@ def generate_chart():
     dwg.save()
     print("SVG Re-generated successfully with Legend and Month Lines.")
 
+def update_readme():
+    """Updates the README.md file with a new version number for the SVG to force GitHub cache refresh."""
+    try:
+        readme_path = 'README.md'
+        with open(readme_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # Regex to find ![Focus Graph](./progress.svg?v=...)
+        # Pattern captures the prefix, the old version number, and the suffix
+        pattern = r'(\!\[Focus Graph\]\(\./progress\.svg\?v=)(\d+)(\))'
+        
+        # New version: current timestamp (integer)
+        new_version = int(datetime.datetime.now().timestamp())
+        
+        # Replace only if pattern is found
+        if re.search(pattern, content):
+            new_content = re.sub(pattern, f'\\g<1>{new_version}\\g<3>', content)
+            
+            if content != new_content:
+                with open(readme_path, 'w', encoding='utf-8') as f:
+                    f.write(new_content)
+                print(f"README updated with new version: {new_version}")
+            else:
+                print("README version already up to date.")
+        else:
+            print("Pattern not found in README.md. Could not update version.")
+
+    except Exception as e:
+        print(f"Error updating README: {e}")
+
 if __name__ == "__main__":
     generate_chart()
+    update_readme()
