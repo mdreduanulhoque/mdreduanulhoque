@@ -19,28 +19,47 @@ def get_color(hours):
         return "#218380"      # 🟢 Green (5+ hrs)
     return "#ebedf0"          # ⚪ Grey (Empty/Future)
 
-# --- Data Fetching ---
+# --- Data Fetching (REVISED FOR ROBUSTNESS) ---
 def fetch_and_process_data():
     try:
+        # 1. Fetch CSV data
         response = requests.get(GOOGLE_SHEET_CSV_URL)
         response.raise_for_status() 
 
         data_io = StringIO(response.text)
-        # Read CSV. Assumes first column is Date and second is Hours.
-        df = pd.read_csv(data_io)
         
-        # Ensure column names are set correctly based on the CSV headers
-        df.columns = ['Date', 'Hours'] 
-        df['Date'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m-%d')
+        # Read CSV:
+        # header=0 tells pandas to use the first row as headers (Date, Hours)
+        # skipinitialspace=True handles extra whitespace between columns
+        df = pd.read_csv(data_io, header=0, skipinitialspace=True)
         
-        # Returns {"YYYY-MM-DD": hours}
+        # 2. Clean and Standardize Column Names
+        # This handles cases where headers might have leading/trailing spaces
+        df.columns = df.columns.str.strip()
+
+        # 3. Filter for valid data (ensure we only have 'Date' and 'Hours')
+        if 'Date' not in df.columns or 'Hours' not in df.columns:
+            print("❌ Error: CSV headers must contain 'Date' and 'Hours'.")
+            return {}
+
+        # 4. Drop any rows where both Date and Hours are missing (empty rows)
+        df.dropna(subset=['Date', 'Hours'], how='all', inplace=True)
+        
+        # 5. Process and Convert
+        df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.strftime('%Y-%m-%d')
+        
+        # Drop rows where date conversion failed (i.e., invalid dates)
+        df.dropna(subset=['Date'], inplace=True)
+        
+        # Create the final data dictionary
         return {str(k): int(v) for k, v in df.set_index('Date')['Hours'].to_dict()}
 
     except Exception as e:
-        print(f"❌ Error fetching or processing data from Google Sheet: {e}")
-        # Return empty data so the script doesn't crash, it just draws an empty grid.
+        print(f"❌ CRITICAL ERROR IN FETCHING/PROCESSING: {e}")
+        # Print the full error to the logs for better debugging
+        import traceback
+        traceback.print_exc()
         return {}
-
 
 # --- SVG Drawing ---
 def generate_chart():
