@@ -4,9 +4,7 @@ import datetime
 import svgwrite
 from io import StringIO
 
-# 🌐 PASTE YOUR GOOGLE SHEETS CSV EXPORT LINK HERE:
-# Example: https://docs.google.com/spreadsheets/d/1xtyb2hBfNScEewEQXG__3sGENkSY6WqdEWieGk2baiA/export?format=csv&gid=0
-GOOGLE_SHEET_CSV_URL = "YOUR_GOOGLE_SHEET_CSV_EXPORT_URL_HERE" 
+GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1xtyb2hBfNScEewEQXG__3sGENkSY6WqdEWieGk2baiA/export?format=csv&gid=0"
 
 # --- Color Configuration ---
 def get_color(hours):
