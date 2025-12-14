@@ -19,7 +19,7 @@ def get_color(hours):
         return "#218380"      # 🟢 Green (5+ hrs)
     return "#ebedf0"          # ⚪ Grey (Empty/Future)
 
-# --- Data Fetching (REVISED FOR ROBUSTNESS) ---
+# --- Data Fetching (FINAL FIX: Handling Header/Column Skip) ---
 def fetch_and_process_data():
     try:
         # 1. Fetch CSV data
@@ -29,23 +29,17 @@ def fetch_and_process_data():
         data_io = StringIO(response.text)
         
         # Read CSV:
-        # header=0 tells pandas to use the first row as headers (Date, Hours)
-        # skipinitialspace=True handles extra whitespace between columns
-        df = pd.read_csv(data_io, header=0, skipinitialspace=True)
+        # usecols=[1, 2]: Reads B and C (to skip the blank Column A in the CSV)
+        # header=0: Specifies the first row (the one with 'Date' and 'Hours') as the header
+        # names=['Date', 'Hours']: FORCES the column names after skipping the first column.
+        df = pd.read_csv(data_io, header=0, usecols=[1, 2], names=['Date', 'Hours'], skipinitialspace=True)
         
-        # 2. Clean and Standardize Column Names
-        # This handles cases where headers might have leading/trailing spaces
-        df.columns = df.columns.str.strip()
-
-        # 3. Filter for valid data (ensure we only have 'Date' and 'Hours')
-        if 'Date' not in df.columns or 'Hours' not in df.columns:
-            print("❌ Error: CSV headers must contain 'Date' and 'Hours'.")
-            return {}
-
-        # 4. Drop any rows where both Date and Hours are missing (empty rows)
+        # 2. Drop any rows where both Date and Hours are missing (empty rows below data)
+        # Use errors='coerce' to handle any non-numeric values gracefully
+        df['Hours'] = pd.to_numeric(df['Hours'], errors='coerce')
         df.dropna(subset=['Date', 'Hours'], how='all', inplace=True)
         
-        # 5. Process and Convert
+        # 3. Process and Convert
         df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.strftime('%Y-%m-%d')
         
         # Drop rows where date conversion failed (i.e., invalid dates)
@@ -56,7 +50,6 @@ def fetch_and_process_data():
 
     except Exception as e:
         print(f"❌ CRITICAL ERROR IN FETCHING/PROCESSING: {e}")
-        # Print the full error to the logs for better debugging
         import traceback
         traceback.print_exc()
         return {}
