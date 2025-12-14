@@ -119,9 +119,8 @@ def generate_chart():
                              fill="#666", font_size="10px"))
 
             # Draw a vertical line for the month boundary
-            dwg.add(dwg.line(start=(x_pos - (gap/2)), end=(x_pos - (gap/2)), 
-                             start_y=start_y_grid - 2, 
-                             end_y=start_y_grid + (7 * (box_size + gap)) - gap + 2, 
+            dwg.add(dwg.line(start=(x_pos - (gap/2), start_y_grid - 2), 
+                             end=(x_pos - (gap/2), start_y_grid + (7 * (box_size + gap)) - gap + 2), 
                              stroke="#999999", stroke_width=0.5))
                              
         last_month = current_day.month
