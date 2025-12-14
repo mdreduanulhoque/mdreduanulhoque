@@ -67,7 +67,7 @@ def generate_chart():
 
     # SVG Setup
     # 
-    dwg = svgwrite.Drawing('progress.svg', profile='full', size=("850px", "160px"))
+    dwg = svgwrite.Drawing('progress.svg', profile='full', size=("900px", "160px"))
     dwg['xmlns'] = "http://www.w3.org/2000/svg"
 
     # 1. Draw Color Legend 🎨
