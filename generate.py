@@ -32,7 +32,7 @@ def fetch_and_process_data():
         # usecols=[1, 2]: Reads B and C (to skip the blank Column A in the CSV)
         # header=0: Specifies the first row (the one with 'Date' and 'Hours') as the header
         # names=['Date', 'Hours']: FORCES the column names after skipping the first column.
-        df = pd.read_csv(data_io, header=0, usecols=[1, 2], names=['Date', 'Hours'], skipinitialspace=True)
+        df = pd.read_csv(data_io, header=0, usecols=[0, 1], names=['Date', 'Hours'], skipinitialspace=True)
         
         # 2. Drop any rows where both Date and Hours are missing (empty rows below data)
         # Use errors='coerce' to handle any non-numeric values gracefully
@@ -46,10 +46,10 @@ def fetch_and_process_data():
         df.dropna(subset=['Date'], inplace=True)
         
         # Create the final data dictionary
-        return {str(k): int(v) for k, v in df.set_index('Date')['Hours'].to_dict()}
+        return {str(k): int(v) for k, v in df.set_index('Date')['Hours'].to_dict().items()}
 
     except Exception as e:
-        print(f"❌ CRITICAL ERROR IN FETCHING/PROCESSING: {e}")
+        print(f"CRITICAL ERROR IN FETCHING/PROCESSING: {e}")
         import traceback
         traceback.print_exc()
         return {}
@@ -127,7 +127,7 @@ def generate_chart():
         current_day += datetime.timedelta(days=1)
 
     dwg.save()
-    print("✅ SVG Re-generated successfully with Legend and Month Lines.")
+    print("SVG Re-generated successfully with Legend and Month Lines.")
 
 if __name__ == "__main__":
     generate_chart()
